@@ -1,0 +1,399 @@
+[
+ {
+  "id": "jet_engine",
+  "query": "how does a turbofan jet engine work?",
+  "must_have": [
+   "fan",
+   "compressor",
+   "combustor",
+   "turbine",
+   "nozzle"
+  ],
+  "needs_internal": true,
+  "category": "machine",
+  "split": "core"
+ },
+ {
+  "id": "four_stroke_engine",
+  "query": "how does a piston in a four-stroke car engine make power?",
+  "must_have": [
+   "piston",
+   "cylinder",
+   "crankshaft",
+   "spark plug",
+   "intake valve",
+   "exhaust valve"
+  ],
+  "needs_internal": true,
+  "category": "machine",
+  "split": "core"
+ },
+ {
+  "id": "dslr_camera_lens",
+  "query": "what's happening inside a DSLR camera lens when I focus and zoom?",
+  "must_have": [
+   "lens element",
+   "aperture",
+   "diaphragm",
+   "focus",
+   "zoom",
+   "barrel"
+  ],
+  "needs_internal": true,
+  "category": "machine",
+  "split": "core"
+ },
+ {
+  "id": "human_heart",
+  "query": "how does my heart pump blood around my body?",
+  "must_have": [
+   "atrium",
+   "ventricle",
+   "valve",
+   "aorta",
+   "septum"
+  ],
+  "needs_internal": true,
+  "category": "biology",
+  "split": "core"
+ },
+ {
+  "id": "water_molecule",
+  "query": "what does a water molecule actually look like?",
+  "must_have": [
+   "oxygen",
+   "hydrogen",
+   "bond"
+  ],
+  "needs_internal": false,
+  "category": "chemistry",
+  "split": "core"
+ },
+ {
+  "id": "methane_molecule",
+  "query": "why is a methane molecule shaped like a little pyramid?",
+  "must_have": [
+   "carbon",
+   "hydrogen",
+   "bond"
+  ],
+  "needs_internal": false,
+  "category": "chemistry",
+  "split": "core"
+ },
+ {
+  "id": "suspension_bridge",
+  "query": "how does a suspension bridge hold up all that traffic?",
+  "must_have": [
+   "deck",
+   "tower",
+   "main cable",
+   "suspender",
+   "anchorage"
+  ],
+  "needs_internal": false,
+  "category": "building",
+  "split": "core"
+ },
+ {
+  "id": "skyscraper_core",
+  "query": "what keeps a skyscraper standing, and what's inside its core?",
+  "must_have": [
+   "core",
+   "shear wall",
+   "column",
+   "beam",
+   "foundation",
+   "elevator"
+  ],
+  "needs_internal": true,
+  "category": "building",
+  "split": "core"
+ },
+ {
+  "id": "cpu_chip_package",
+  "query": "what's actually inside a CPU chip package?",
+  "must_have": [
+   "die",
+   "substrate",
+   "core",
+   "cache",
+   "transistor",
+   "pin"
+  ],
+  "needs_internal": true,
+  "category": "electronics",
+  "split": "core"
+ },
+ {
+  "id": "raspberry_pi_board",
+  "query": "what do all the chips and connectors on a Raspberry Pi-style board do?",
+  "must_have": [
+   "processor",
+   "memory",
+   "usb",
+   "gpio",
+   "ethernet",
+   "power"
+  ],
+  "needs_internal": false,
+  "category": "electronics",
+  "split": "core"
+ },
+ {
+  "id": "volcano",
+  "query": "what's going on inside a volcano before it erupts?",
+  "must_have": [
+   "magma chamber",
+   "conduit",
+   "vent",
+   "crater",
+   "lava"
+  ],
+  "needs_internal": true,
+  "category": "nature",
+  "split": "core"
+ },
+ {
+  "id": "tree_trunk_rings",
+  "query": "why does a tree trunk have rings, and what do its layers do?",
+  "must_have": [
+   "bark",
+   "cambium",
+   "xylem",
+   "phloem",
+   "pith",
+   "growth ring"
+  ],
+  "needs_internal": true,
+  "category": "nature",
+  "split": "core"
+ },
+ {
+  "id": "bicycle_drivetrain",
+  "query": "how do my bike's pedals and gears turn the back wheel?",
+  "must_have": [
+   "pedal",
+   "crankset",
+   "chain",
+   "cassette",
+   "derailleur",
+   "rear wheel"
+  ],
+  "needs_internal": false,
+  "category": "vehicle",
+  "split": "core"
+ },
+ {
+  "id": "toilet_flush_tank",
+  "query": "what happens inside a toilet tank when I flush?",
+  "must_have": [
+   "flapper",
+   "flush valve",
+   "fill valve",
+   "float",
+   "overflow tube"
+  ],
+  "needs_internal": true,
+  "category": "everyday",
+  "split": "core"
+ },
+ {
+  "id": "f35b_lift_fan",
+  "query": "how does an F-35B use its lift fan to hover?",
+  "must_have": [
+   "lift fan",
+   "drive shaft",
+   "clutch",
+   "engine",
+   "swivel nozzle",
+   "roll post"
+  ],
+  "needs_internal": true,
+  "category": "vehicle",
+  "split": "core"
+ },
+ {
+  "id": "lithium_ion_battery_cell",
+  "query": "what's inside a lithium-ion battery cell, and how does it charge?",
+  "must_have": [
+   "anode",
+   "cathode",
+   "separator",
+   "electrolyte",
+   "current collector",
+   "lithium ion"
+  ],
+  "needs_internal": true,
+  "category": "chemistry",
+  "split": "core"
+ },
+ {
+  "id": "f22_raptor",
+  "query": "show me how an F-22 Raptor is put together and how it flies",
+  "must_have": [
+   "fuselage",
+   "wing",
+   "vertical",
+   "horizontal",
+   "intake",
+   "engine",
+   "nozzle",
+   "canopy",
+   "weapons bay"
+  ],
+  "needs_internal": true,
+  "category": "vehicle",
+  "split": "hard"
+ },
+ {
+  "id": "apache_helicopter",
+  "query": "how does an AH-64 Apache attack helicopter work?",
+  "must_have": [
+   "main rotor",
+   "tail rotor",
+   "engine",
+   "transmission",
+   "cockpit",
+   "landing gear",
+   "tail boom",
+   "rotor mast"
+  ],
+  "needs_internal": true,
+  "category": "vehicle",
+  "split": "hard"
+ },
+ {
+  "id": "falcon9_rocket",
+  "query": "break down a SpaceX Falcon 9 rocket for me",
+  "must_have": [
+   "first stage",
+   "second stage",
+   "merlin",
+   "grid fin",
+   "landing leg",
+   "interstage",
+   "fairing",
+   "tank"
+  ],
+  "needs_internal": true,
+  "category": "vehicle",
+  "split": "hard"
+ },
+ {
+  "id": "saturn_v",
+  "query": "how did the Saturn V rocket get astronauts to the moon?",
+  "must_have": [
+   "s-ic",
+   "s-ii",
+   "s-ivb",
+   "f-1",
+   "command module",
+   "service module",
+   "lunar module",
+   "escape tower"
+  ],
+  "needs_internal": true,
+  "category": "vehicle",
+  "split": "hard"
+ },
+ {
+  "id": "v8_engine",
+  "query": "how does a V8 engine work inside?",
+  "must_have": [
+   "piston",
+   "crankshaft",
+   "camshaft",
+   "cylinder",
+   "valve",
+   "intake manifold",
+   "connecting rod"
+  ],
+  "needs_internal": true,
+  "category": "machine",
+  "split": "hard"
+ },
+ {
+  "id": "mars_rover",
+  "query": "what are all the parts of the Perseverance Mars rover?",
+  "must_have": [
+   "wheel",
+   "rocker",
+   "bogie",
+   "mast",
+   "robotic arm",
+   "body",
+   "antenna",
+   "rtg"
+  ],
+  "needs_internal": false,
+  "category": "vehicle",
+  "split": "hard"
+ },
+ {
+  "id": "pwr_reactor",
+  "query": "how does a pressurized water nuclear reactor make electricity?",
+  "must_have": [
+   "reactor vessel",
+   "fuel",
+   "control rod",
+   "steam generator",
+   "pressurizer",
+   "turbine",
+   "coolant pump",
+   "containment"
+  ],
+  "needs_internal": true,
+  "category": "machine",
+  "split": "hard"
+ },
+ {
+  "id": "mechanical_watch",
+  "query": "how does a mechanical wristwatch keep time?",
+  "must_have": [
+   "mainspring",
+   "balance wheel",
+   "escape wheel",
+   "pallet",
+   "gear train",
+   "crown",
+   "hand"
+  ],
+  "needs_internal": true,
+  "category": "machine",
+  "split": "hard"
+ },
+ {
+  "id": "nuclear_submarine",
+  "query": "what's inside a nuclear attack submarine?",
+  "must_have": [
+   "hull",
+   "sail",
+   "reactor",
+   "propulsor",
+   "torpedo",
+   "sonar",
+   "control room",
+   "ballast tank"
+  ],
+  "needs_internal": true,
+  "category": "vehicle",
+  "split": "hard"
+ },
+ {
+  "id": "human_eye",
+  "query": "how does the human eye focus light and see?",
+  "must_have": [
+   "cornea",
+   "iris",
+   "pupil",
+   "lens",
+   "retina",
+   "optic nerve",
+   "vitreous"
+  ],
+  "needs_internal": true,
+  "category": "biology",
+  "split": "hard"
+ }
+]
