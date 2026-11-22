@@ -1,0 +1,12 @@
+.env
+.venv/
+.venv-blender/
+__pycache__/
+media/
+out/videos/.manim/
+out/forge/**/.manim/
+out/server.log
+out/uploads/
+node_modules/
+out/
+mac/*.log
