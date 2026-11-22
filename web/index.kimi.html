@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0e13">
+  <title>Opto — real-time graphics explainer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kalam:wght@400;700&display=swap" rel="stylesheet">
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --accent: #4fc3f7;
+      --muted: #9fb3c8;
+      --glass: rgba(20, 26, 36, .72);
+      --line: rgba(255, 255, 255, .08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      color: #e8edf3;
+      background: radial-gradient(circle at 50% 42%, #1a2230 0%, #0b0e13 100%);
+      font-family: Inter, system-ui, sans-serif;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button,
+    select {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      color: inherit;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+    }
+
+    #title {
+      position: fixed;
+      top: 20px;
+      left: 24px;
+      z-index: 20;
+      max-width: min(330px, calc(100vw - 48px));
+      pointer-events: none;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, .35);
+    }
+
+    #sceneTitle {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1.25;
+      letter-spacing: -.015em;
+    }
+
+    #sceneSubtitle {
+      margin-top: 5px;
+      color: #9fb3c8;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .ui-button,
+    .tool-button,
+    #mode {
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: transparent;
+      color: #dbe6f0;
+      cursor: pointer;
+      transition: border-color .18s ease, background .18s ease, color .18s ease,
+        box-shadow .18s ease, opacity .18s ease;
+    }
+
+    .ui-button:hover,
+    .tool-button:hover,
+    #mode:hover {
+      background: rgba(255, 255, 255, .065);
+    }
+
+    .ui-button:disabled,
+    .tool-button:disabled {
+      cursor: default;
+      opacity: .38;
+    }
+
+    #scenesButton {
+      position: fixed;
+      top: 79px;
+      left: 24px;
+      z-index: 31;
+      padding: 6px 12px;
+      border-color: var(--line);
+      background: rgba(20, 26, 36, .58);
+      backdrop-filter: blur(12px);
+      color: #b9c9d8;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    #scenesButton.active {
+      border-color: rgba(79, 195, 247, .6);
+      color: var(--accent);
+    }
+
+    #askbar {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      width: calc(100% - 32px);
+      max-width: 720px;
+      padding: 6px;
+      transform: translateX(-50%);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 999px;
+      background: rgba(20, 26, 36, .72);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 12px 42px rgba(0, 0, 0, .32), inset 0 1px 0 rgba(255, 255, 255, .025);
+    }
+
+    #askInput {
+      flex: 1;
+      min-width: 0;
+      height: 38px;
+      padding: 0 14px;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: #e8edf3;
+      font-size: 14px;
+    }
+
+    #askInput::placeholder {
+      color: #8294a7;
+      opacity: 1;
+    }
+
+    #askbar:focus-within {
+      border-color: rgba(79, 195, 247, .38);
+      box-shadow: 0 12px 42px rgba(0, 0, 0, .32), 0 0 0 3px rgba(79, 195, 247, .07);
+    }
+
+    #askInput:focus-visible {
+      outline: none;
+    }
+
+    #explainButton {
+      flex: none;
+      height: 38px;
+      padding: 0 19px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #09131b;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      transition: background .18s ease, transform .18s ease;
+    }
+
+    #explainButton:hover {
+      background: #79d2fa;
+    }
+
+    #explainButton:active {
+      transform: scale(.97);
+    }
+
+    #status {
+      position: fixed;
+      top: 76px;
+      left: 50%;
+      z-index: 29;
+      max-width: calc(100vw - 32px);
+      padding: 6px 12px;
+      transform: translateX(-50%);
+      border: 1px solid rgba(255, 255, 255, .07);
+      border-radius: 999px;
+      background: rgba(12, 17, 24, .68);
+      backdrop-filter: blur(10px);
+      color: #aebfd0;
+      font-size: 11.5px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
+    }
+
+    #toolbar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      max-width: calc(100vw - 24px);
+      padding: 6px;
+      transform: translateX(-50%);
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 999px;
+      background: rgba(20, 26, 36, .72);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 12px 38px rgba(0, 0, 0, .34);
+    }
+
+    .tool-button {
+      padding: 8px 12px;
+      font-size: 12.5px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .tool-button.active {
+      border-color: #4fc3f7;
+      background: rgba(79, 195, 247, .09);
+      color: #a8e4ff;
+      box-shadow: 0 0 14px rgba(79, 195, 247, .2), inset 0 0 8px rgba(79, 195, 247, .06);
+    }
+
+    #mode {
+      height: 34px;
+      margin-left: 3px;
+      padding: 0 25px 0 10px;
+      border-color: rgba(255, 255, 255, .06);
+      border-radius: 12px;
+      background-color: rgba(255, 255, 255, .025);
+      color: #aebfd0;
+      font-size: 11.5px;
+      cursor: pointer;
+    }
+
+    #mode option {
+      background: #151c26;
+      color: #e8edf3;
+    }
+
+    #caption {
+      position: fixed;
+      bottom: 82px;
+      left: 50%;
+      z-index: 25;
+      width: max-content;
+      max-width: 760px;
+      padding: 10px 17px;
+      transform: translateX(-50%);
+      border-radius: 10px;
+      background: rgba(5, 7, 10, .72);
+      color: #f0f4f8;
+      font-size: 17px;
+      line-height: 1.5;
+      text-align: center;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, .65);
+      pointer-events: none;
+    }
+
+    #gallery {
+      position: fixed;
+      top: 119px;
+      left: 16px;
+      z-index: 45;
+      width: min(310px, calc(100vw - 32px));
+      max-height: calc(100vh - 155px);
+      padding: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .09);
+      border-radius: 17px;
+      background: rgba(15, 21, 30, .88);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 20px 55px rgba(0, 0, 0, .42);
+    }
+
+    .gallery-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 4px 10px;
+      color: #c8d5e1;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    #galleryRefresh {
+      padding: 3px 7px;
+      border: 0;
+      background: transparent;
+      color: #8fa5b9;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    #galleryRefresh:hover {
+      color: var(--accent);
+    }
+
+    #sceneList {
+      display: grid;
+      gap: 6px;
+      max-height: calc(100vh - 205px);
+      padding-right: 2px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, .16) transparent;
+    }
+
+    .gallery-empty {
+      padding: 18px 10px;
+      color: #8497aa;
+      font-size: 12.5px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .scene-item {
+      display: block;
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid transparent;
+      border-radius: 11px;
+      background: rgba(255, 255, 255, .025);
+      color: inherit;
+      cursor: pointer;
+      text-align: left;
+      transition: background .16s ease, border-color .16s ease;
+    }
+
+    .scene-item:hover {
+      background: rgba(255, 255, 255, .065);
+    }
+
+    .scene-item.current {
+      border-color: rgba(79, 195, 247, .45);
+      background: rgba(79, 195, 247, .075);
+    }
+
+    .scene-item-title {
+      display: block;
+      color: #dce6ef;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+
+    .scene-item-query {
+      display: block;
+      margin-top: 3px;
+      overflow: hidden;
+      color: #8196aa;
+      font-size: 11px;
+      line-height: 1.35;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .scene-item-meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 7px;
+      color: #9aadc0;
+      font-size: 10.5px;
+    }
+
+    .video-badge {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: rgba(79, 195, 247, .12);
+      color: #7ed7fc;
+      font-weight: 600;
+    }
+
+    #card {
+      position: fixed;
+      z-index: 60;
+      width: max-content;
+      max-width: 300px;
+      max-height: calc(100vh - 32px);
+      padding: 15px 17px 16px;
+      overflow: auto;
+      transform: rotate(-.6deg);
+      border: 1.5px solid #1b1f24;
+      border-radius: 6px;
+      background: #fffdf4;
+      box-shadow: 5px 7px 0 rgba(0, 0, 0, .24), 0 15px 35px rgba(0, 0, 0, .24);
+      color: #1b1f24;
+      font-family: Kalam, cursive;
+      font-size: 17px;
+      line-height: 1.45;
+    }
+
+    #cardHeader {
+      padding-right: 23px;
+      color: #1b1f24;
+      font-family: Inter, sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      line-height: 1.35;
+      text-transform: uppercase;
+    }
+
+    #cardBody {
+      margin-top: 8px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    #cardClose {
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      width: 27px;
+      height: 27px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: #1b1f24;
+      cursor: pointer;
+      font-family: Inter, sans-serif;
+      font-size: 23px;
+      line-height: 25px;
+    }
+
+    #cardShimmer {
+      margin-top: 7px;
+      background: linear-gradient(90deg, #777466 20%, #1b1f24 42%, #777466 64%);
+      background-size: 220% 100%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      font-family: Inter, sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      animation: shimmer 1.25s linear infinite;
+    }
+
+    #cardShimmer.error {
+      background: none;
+      color: #87575a;
+      animation: none;
+    }
+
+    @keyframes shimmer {
+      from { background-position: 110% 0; }
+      to { background-position: -110% 0; }
+    }
+
+    #video {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 32px;
+      background: rgba(3, 5, 8, .9);
+      backdrop-filter: blur(12px);
+    }
+
+    #videoPlayer {
+      display: block;
+      max-width: 90vw;
+      max-height: 80vh;
+      border-radius: 10px;
+      background: #000;
+      box-shadow: 0 22px 70px rgba(0, 0, 0, .55);
+    }
+
+    #videoStatus {
+      max-width: 620px;
+      color: #c9d6e2;
+      font-size: 15px;
+      line-height: 1.6;
+      text-align: center;
+      white-space: pre-wrap;
+    }
+
+    #videoClose {
+      position: absolute;
+      top: 18px;
+      right: 20px;
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border: 1px solid rgba(255, 255, 255, .12);
+      border-radius: 50%;
+      background: rgba(20, 26, 36, .7);
+      color: #e8edf3;
+      cursor: pointer;
+      font-size: 25px;
+      line-height: 34px;
+    }
+
+    .opto-chip {
+      font: 600 12.5px Inter, sans-serif;
+      padding: 3px 8px;
+      border: 1.5px solid #1b1f24;
+      border-radius: 4px;
+      color: #1b1f24;
+      white-space: nowrap;
+      box-shadow: 0 2px 0 rgba(0, 0, 0, .25);
+      user-select: none;
+    }
+
+    .opto-yellow { background: #f7e07b; }
+    .opto-pink { background: #f4a6c0; }
+    .opto-green { background: #a3e4ad; }
+    .opto-blue { background: #a6cdf7; }
+    .opto-orange { background: #f7bb7d; }
+    .opto-purple { background: #cdb6f4; }
+
+    .opto-arrow-chip {
+      background: rgba(10, 14, 20, .8);
+      color: #cfe8ff;
+      border-color: #4fc3f7;
+    }
+
+    .opto-leaders line {
+      stroke: #e8edf3;
+    }
+
+    .opto-leaders circle {
+      fill: #fff;
+    }
+
+    @media (max-width: 980px) {
+      #title {
+        top: 88px;
+        left: 18px;
+        max-width: 260px;
+      }
+
+      #scenesButton {
+        top: 144px;
+        left: 18px;
+      }
+
+      #gallery {
+        top: 182px;
+        max-height: calc(100vh - 215px);
+      }
+
+      #sceneList {
+        max-height: calc(100vh - 265px);
+      }
+    }
+
+    @media (max-width: 640px) {
+      #askbar {
+        top: 12px;
+      }
+
+      #askInput {
+        padding: 0 9px;
+        font-size: 13px;
+      }
+
+      #explainButton {
+        padding: 0 14px;
+      }
+
+      #status {
+        top: 70px;
+      }
+
+      #title {
+        top: 101px;
+        left: 16px;
+        max-width: calc(100vw - 32px);
+      }
+
+      #sceneTitle {
+        font-size: 17px;
+      }
+
+      #sceneSubtitle {
+        margin-top: 3px;
+        font-size: 12px;
+      }
+
+      #scenesButton {
+        top: 153px;
+        left: 16px;
+      }
+
+      #gallery {
+        top: 190px;
+        left: 12px;
+        max-height: calc(100vh - 235px);
+      }
+
+      #sceneList {
+        max-height: calc(100vh - 285px);
+      }
+
+      #toolbar {
+        bottom: 12px;
+        flex-wrap: wrap;
+        justify-content: center;
+        width: calc(100% - 24px);
+        border-radius: 20px;
+      }
+
+      .tool-button {
+        padding: 7px 9px;
+        font-size: 12px;
+      }
+
+      #mode {
+        margin-left: 0;
+      }
+
+      #caption {
+        bottom: 116px;
+        max-width: calc(100vw - 28px);
+        font-size: 16px;
+      }
+
+      #card {
+        max-width: 80vw;
+      }
+
+      #video {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="stage" aria-label="Interactive 3D explanation"></main>
+
+  <header id="title">
+    <h1 id="sceneTitle">Opto</h1>
+    <div id="sceneSubtitle">Ask about something physical. Watch it explain itself.</div>
+  </header>
+
+  <button id="scenesButton" class="ui-button" type="button" aria-expanded="false" aria-controls="gallery">
+    Scenes
+  </button>
+
+  <form id="askbar" autocomplete="off">
+    <input
+      id="askInput"
+      type="text"
+      aria-label="Ask about a physical thing"
+      placeholder="Ask about anything physical — an engine, a heart, a molecule…"
+      spellcheck="false"
+    >
+    <button id="explainButton" type="submit">Explain</button>
+  </form>
+
+  <div id="status" role="status" aria-live="polite" hidden></div>
+
+  <aside id="gallery" aria-label="Cached scenes" hidden>
+    <div class="gallery-heading">
+      <span>Saved scenes</span>
+      <button id="galleryRefresh" type="button">Refresh</button>
+    </div>
+    <div id="sceneList"></div>
+  </aside>
+
+  <div id="caption" aria-live="polite" hidden></div>
+
+  <nav id="toolbar" aria-label="Scene controls">
+    <button id="cutButton" class="tool-button" type="button" aria-pressed="false">Cross-section</button>
+    <button id="explodeButton" class="tool-button" type="button" aria-pressed="false">Explode</button>
+    <button id="playButton" class="tool-button" type="button" disabled>Play story</button>
+    <button id="videoButton" class="tool-button" type="button" disabled>Video</button>
+    <select id="mode" aria-label="Generation mode">
+      <option value="kimi">Kimi</option>
+      <option value="hybrid">Hybrid (fast draft)</option>
+    </select>
+  </nav>
+
+  <article id="card" aria-live="polite" hidden>
+    <button id="cardClose" type="button" aria-label="Close explanation">×</button>
+    <div id="cardHeader"></div>
+    <div id="cardBody"></div>
+    <div id="cardShimmer">asking Kimi…</div>
+  </article>
+
+  <section id="video" role="dialog" aria-modal="true" aria-label="Manim explanation video" hidden>
+    <button id="videoClose" type="button" aria-label="Close video">×</button>
+    <div id="videoStatus">Rendering 3Blue1Brown-style video with Manim…</div>
+    <video id="videoPlayer" controls autoplay playsinline hidden></video>
+  </section>
+
+  <script type="module">
+    import { createViewer } from '/web/viewer.js';
+
+    const $ = id => document.getElementById(id);
+    const stage = $('stage');
+    const askbar = $('askbar');
+    const askInput = $('askInput');
+    const statusEl = $('status');
+    const sceneTitle = $('sceneTitle');
+    const sceneSubtitle = $('sceneSubtitle');
+    const scenesButton = $('scenesButton');
+    const gallery = $('gallery');
+    const galleryRefresh = $('galleryRefresh');
+    const sceneList = $('sceneList');
+    const caption = $('caption');
+    const cutButton = $('cutButton');
+    const explodeButton = $('explodeButton');
+    const playButton = $('playButton');
+    const videoButton = $('videoButton');
+    const modeSelect = $('mode');
+    const card = $('card');
+    const cardHeader = $('cardHeader');
+    const cardBody = $('cardBody');
+    const cardShimmer = $('cardShimmer');
+    const cardClose = $('cardClose');
+    const videoModal = $('video');
+    const videoPlayer = $('videoPlayer');
+    const videoStatus = $('videoStatus');
+    const videoClose = $('videoClose');
+
+    let currentId = null;
+    let currentScene = null;
+    let streamedBeats = [];
+    let streamedPartCount = 0;
+    let eventSource = null;
+    let streamVersion = 0;
+    let queueTicker = null;
+    let cutEnabled = false;
+    let explodeEnabled = false;
+    let storyPlaying = false;
+    let storyVersion = 0;
+    let cardRequest = 0;
+    let cardPoint = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    let galleryRequest = 0;
+    let videoVersion = 0;
+    let videoTicker = null;
+    let videoStarted = 0;
+
+    const viewer = createViewer(stage, { onPartClick });
+
+    function setStatus(text) {
+      statusEl.textContent = text || '';
+      statusEl.hidden = !text;
+    }
+
+    function setTitle(title, subtitle) {
+      sceneTitle.textContent = title || 'Opto';
+      sceneSubtitle.textContent = subtitle || '';
+    }
+
+    function setCutState(on) {
+      cutEnabled = Boolean(on);
+      viewer.setCut(cutEnabled);
+      cutButton.classList.toggle('active', cutEnabled);
+      cutButton.setAttribute('aria-pressed', String(cutEnabled));
+    }
+
+    function setExplodeState(on) {
+      explodeEnabled = Boolean(on);
+      viewer.setExplode(explodeEnabled ? 1 : 0);
+      explodeButton.classList.toggle('active', explodeEnabled);
+      explodeButton.setAttribute('aria-pressed', String(explodeEnabled));
+    }
+
+    function resetControlState() {
+      cutEnabled = false;
+      explodeEnabled = false;
+      cutButton.classList.remove('active');
+      explodeButton.classList.remove('active');
+      cutButton.setAttribute('aria-pressed', 'false');
+      explodeButton.setAttribute('aria-pressed', 'false');
+    }
+
+    function updateStoryAvailability() {
+      const available = currentScene
+        ? Array.isArray(currentScene.beats) && currentScene.beats.length > 0
+        : streamedBeats.length > 0;
+      playButton.disabled = !available && !storyPlaying;
+      videoButton.disabled = !currentId;
+    }
+
+    function stopStory() {
+      storyVersion += 1;
+      storyPlaying = false;
+      playButton.textContent = 'Play story';
+      playButton.classList.remove('active');
+      caption.textContent = '';
+      caption.hidden = true;
+      viewer.highlight(null);
+      setExplodeState(false);
+      updateStoryAvailability();
+    }
+
+    function clearQueueTicker() {
+      if (queueTicker !== null) {
+        clearInterval(queueTicker);
+        queueTicker = null;
+      }
+    }
+
+    function cancelStream() {
+      streamVersion += 1;
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+      clearQueueTicker();
+    }
+
+    function parseEvent(event) {
+      try {
+        return JSON.parse(event.data);
+      } catch {
+        return null;
+      }
+    }
+
+    function finiteNumber(...values) {
+      for (const value of values) {
+        if (value === null || value === undefined || value === '') continue;
+        const number = Number(value);
+        if (Number.isFinite(number)) return number;
+      }
+      return null;
+    }
+
+    function formatRate(value) {
+      return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
+    }
+
+    function startQuery(rawQuery) {
+      const query = String(rawQuery || '').trim();
+      if (!query) {
+        askInput.focus();
+        return;
+      }
+
+      cancelStream();
+      stopStory();
+      closeCard();
+      viewer.reset();
+      resetControlState();
+
+      currentId = null;
+      currentScene = null;
+      streamedBeats = [];
+      streamedPartCount = 0;
+      updateStoryAvailability();
+
+      askInput.value = query;
+      setTitle(
+        query,
+        modeSelect.value === 'hybrid'
+          ? 'Building a fast draft, then refining with Kimi K3.1…'
+          : 'Building a live cutaway with Kimi K3.1…'
+      );
+      setStatus('Kimi K3.1 · connecting…');
+
+      const generation = ++streamVersion;
+      const mode = modeSelect.value;
+      const source = new EventSource(
+        '/api/scene?q=' + encodeURIComponent(query) + '&mode=' + encodeURIComponent(mode)
+      );
+      eventSource = source;
+
+      let ended = false;
+      let phase = 'connecting';
+      let queuedAt = null;
+      let generationAt = null;
+      let measuredQueue = null;
+
+      const valid = () => !ended && generation === streamVersion && eventSource === source;
+      const close = () => {
+        ended = true;
+        source.close();
+        if (eventSource === source) eventSource = null;
+        clearQueueTicker();
+      };
+
+      const showStreaming = () => {
+        setStatus(`Kimi K3.1 · streaming · ${streamedPartCount} parts`);
+      };
+
+      source.addEventListener('status', event => {
+        if (!valid()) return;
+        const data = parseEvent(event);
+        if (!data) return;
+        phase = data.phase || phase;
+
+        if (phase === 'cache') {
+          setStatus('Kimi K3.1 · checking cache…');
+        } else if (phase === 'queued') {
+          if (queuedAt === null) queuedAt = performance.now();
+          clearQueueTicker();
+          const tick = () => {
+            if (!valid() || phase !== 'queued' || queuedAt === null) return;
+            const elapsed = (performance.now() - queuedAt) / 1000;
+            setStatus(`Kimi K3.1 · queued ${elapsed.toFixed(1)}s`);
+          };
+          tick();
+          queueTicker = setInterval(tick, 100);
+        } else if (phase === 'streaming') {
+          if (queuedAt !== null && measuredQueue === null) {
+            measuredQueue = (performance.now() - queuedAt) / 1000;
+          }
+          if (generationAt === null) generationAt = performance.now();
+          clearQueueTicker();
+          showStreaming();
+        } else if (phase === 'draft_done') {
+          setStatus(`Draft ready · Kimi K3.1 refining · ${streamedPartCount} parts`);
+        } else if (phase === 'error') {
+          setStatus(data.error || data.message || 'Kimi could not build this scene');
+          close();
+        }
+      });
+
+      source.addEventListener('item', event => {
+        if (!valid()) return;
+        const item = parseEvent(event);
+        if (!item) return;
+
+        viewer.apply(item);
+        if (item.t === 'meta') {
+          setTitle(item.title || query, item.subtitle || '');
+        } else if (item.t === 'part') {
+          streamedPartCount += 1;
+        } else if (item.t === 'beat') {
+          streamedBeats.push(item);
+          updateStoryAvailability();
+        }
+
+        if (phase === 'streaming') showStreaming();
+      });
+
+      source.addEventListener('reset', event => {
+        if (!valid()) return;
+        viewer.reset();
+        resetControlState();
+        streamedBeats = [];
+        streamedPartCount = 0;
+        updateStoryAvailability();
+        if (phase === 'streaming' || phase === 'draft_done') showStreaming();
+      });
+
+      source.addEventListener('final', event => {
+        if (!valid()) return;
+        const data = parseEvent(event);
+        if (!data || !data.scene) {
+          setStatus('Connection lost');
+          close();
+          return;
+        }
+
+        if (queuedAt !== null && measuredQueue === null) {
+          measuredQueue = (performance.now() - queuedAt) / 1000;
+        }
+        clearQueueTicker();
+
+        currentId = data.id;
+        currentScene = data.scene;
+        streamedBeats = Array.isArray(data.scene.beats) ? [...data.scene.beats] : [];
+        streamedPartCount = Array.isArray(data.scene.parts) ? data.scene.parts.length : 0;
+
+        viewer.load(data.scene);
+        resetControlState();
+        setTitle(data.scene.title || query, data.scene.subtitle || '');
+        updateStoryAvailability();
+
+        const stats = data.stats || {};
+        const queueSeconds = finiteNumber(
+          stats.queue_time, stats.queued_time, stats.queue_seconds, stats.queue
+        );
+        const generationSeconds = finiteNumber(
+          stats.generation_time, stats.gen_time, stats.generationTime, stats.gen
+        );
+        const measuredGeneration = generationAt !== null
+          ? (performance.now() - generationAt) / 1000
+          : null;
+        const wall = finiteNumber(data.wall);
+        const fallbackGeneration = wall !== null
+          ? Math.max(0, wall - (queueSeconds ?? measuredQueue ?? 0))
+          : 0;
+
+        const pieces = ['Done'];
+        if (data.cached) {
+          pieces.push('cached');
+        } else {
+          pieces.push(`queue ${(queueSeconds ?? measuredQueue ?? 0).toFixed(1)}s`);
+          pieces.push(
+            `gen ${(generationSeconds ?? measuredGeneration ?? fallbackGeneration).toFixed(1)}s`
+          );
+        }
+        pieces.push(`${streamedPartCount} parts`);
+
+        const completionTokens = finiteNumber(
+          stats.completion_tokens, stats.usage?.completion_tokens
+        );
+        const completionTime = finiteNumber(stats.completion_time, stats.completionTime);
+        if (completionTokens !== null && completionTime !== null && completionTime > 0) {
+          pieces.push(`${formatRate(Math.round(completionTokens / completionTime))} tok/s`);
+        }
+
+        setStatus(pieces.join(' · '));
+        close();
+        refreshScenes();
+      });
+
+      source.addEventListener('error', () => {
+        if (!valid()) return;
+        setStatus('Connection lost');
+        close();
+      });
+    }
+
+    async function fetchJSON(url, options) {
+      const response = await fetch(url, options);
+      let data = null;
+      try {
+        data = await response.json();
+      } catch {
+        if (response.ok) throw new Error('The server returned an invalid response.');
+      }
+      if (!response.ok) {
+        throw new Error(data?.error || data?.message || `Request failed (${response.status})`);
+      }
+      return data;
+    }
+
+    async function loadScene(id) {
+      if (!id) return;
+      cancelStream();
+      stopStory();
+      closeCard();
+      setStatus('Loading cached scene…');
+
+      try {
+        const data = await fetchJSON(`/api/scene/${encodeURIComponent(id)}`);
+        if (!data.scene) throw new Error('That scene could not be loaded.');
+
+        currentId = id;
+        currentScene = data.scene;
+        streamedBeats = Array.isArray(data.scene.beats) ? [...data.scene.beats] : [];
+        streamedPartCount = Array.isArray(data.scene.parts) ? data.scene.parts.length : 0;
+
+        viewer.load(data.scene);
+        resetControlState();
+        setTitle(data.scene.title || 'Opto', data.scene.subtitle || '');
+        setStatus(`Done · cached · ${streamedPartCount} parts`);
+        updateStoryAvailability();
+        closeGallery();
+        markCurrentGalleryItem();
+      } catch (error) {
+        setStatus(error.message || 'Could not load scene');
+      }
+    }
+
+    function markCurrentGalleryItem() {
+      for (const item of sceneList.querySelectorAll('.scene-item')) {
+        item.classList.toggle('current', item.dataset.sceneId === String(currentId));
+      }
+    }
+
+    async function refreshScenes() {
+      const request = ++galleryRequest;
+      try {
+        const scenes = await fetchJSON('/api/scenes');
+        if (request !== galleryRequest) return;
+
+        sceneList.replaceChildren();
+        if (!Array.isArray(scenes) || scenes.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'gallery-empty';
+          empty.textContent = 'No saved scenes yet. Ask Opto to build one.';
+          sceneList.appendChild(empty);
+          return;
+        }
+
+        for (const scene of scenes) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'scene-item';
+          button.dataset.sceneId = String(scene.id);
+
+          const title = document.createElement('span');
+          title.className = 'scene-item-title';
+          title.textContent = scene.title || scene.query || 'Untitled scene';
+
+          const query = document.createElement('span');
+          query.className = 'scene-item-query';
+          query.textContent = scene.query || '';
+
+          const meta = document.createElement('span');
+          meta.className = 'scene-item-meta';
+          const count = Array.isArray(scene.parts) ? scene.parts.length : (scene.parts ?? 0);
+          const parts = document.createElement('span');
+          parts.textContent = `${count} parts`;
+          meta.appendChild(parts);
+
+          if (scene.video) {
+            const badge = document.createElement('span');
+            badge.className = 'video-badge';
+            badge.textContent = 'Video';
+            meta.appendChild(badge);
+          }
+
+          button.append(title, query, meta);
+          if (String(scene.id) === String(currentId)) button.classList.add('current');
+          button.addEventListener('click', () => loadScene(scene.id));
+          sceneList.appendChild(button);
+        }
+      } catch (error) {
+        if (request !== galleryRequest) return;
+        sceneList.replaceChildren();
+        const message = document.createElement('div');
+        message.className = 'gallery-empty';
+        message.textContent = error.message || 'Could not load saved scenes.';
+        sceneList.appendChild(message);
+      }
+    }
+
+    function openGallery() {
+      gallery.hidden = false;
+      scenesButton.classList.add('active');
+      scenesButton.setAttribute('aria-expanded', 'true');
+      refreshScenes();
+    }
+
+    function closeGallery() {
+      gallery.hidden = true;
+      scenesButton.classList.remove('active');
+      scenesButton.setAttribute('aria-expanded', 'false');
+    }
+
+    function positionCard() {
+      if (card.hidden) return;
+      const margin = 14;
+      const width = card.offsetWidth;
+      const height = card.offsetHeight;
+      let left = cardPoint.x + 18;
+      let top = cardPoint.y + 18;
+
+      if (left + width > window.innerWidth - margin) {
+        left = cardPoint.x - width - 18;
+      }
+      if (top + height > window.innerHeight - margin) {
+        top = cardPoint.y - height - 18;
+      }
+
+      left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+      top = Math.max(margin, Math.min(top, window.innerHeight - height - margin));
+      card.style.left = `${Math.round(left)}px`;
+      card.style.top = `${Math.round(top)}px`;
+    }
+
+    async function onPartClick(part, point) {
+      cardPoint = { x: point.x, y: point.y };
+      const request = ++cardRequest;
+
+      cardHeader.textContent = part.name || part.label || part.id || 'Part';
+      cardBody.textContent = part.info || 'No notes for this part yet.';
+      cardShimmer.hidden = false;
+      cardShimmer.classList.remove('error');
+      cardShimmer.textContent = 'asking Kimi…';
+      card.hidden = false;
+      positionCard();
+      requestAnimationFrame(positionCard);
+
+      if (!currentId) {
+        cardShimmer.classList.add('error');
+        cardShimmer.textContent = 'The scene is still building. Click again when it is ready.';
+        return;
+      }
+
+      try {
+        const data = await fetchJSON('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scene_id: currentId, part_id: part.id })
+        });
+        if (request !== cardRequest) return;
+        cardBody.textContent = data.answer || part.info || 'Kimi did not return an answer.';
+        cardShimmer.hidden = true;
+        positionCard();
+      } catch (error) {
+        if (request !== cardRequest) return;
+        cardShimmer.classList.add('error');
+        cardShimmer.textContent = error.message || 'Kimi could not answer right now.';
+        positionCard();
+      }
+    }
+
+    function closeCard() {
+      cardRequest += 1;
+      card.hidden = true;
+    }
+
+    function storyBeats() {
+      if (currentScene && Array.isArray(currentScene.beats)) return currentScene.beats;
+      return streamedBeats;
+    }
+
+    function beatDuration(beat) {
+      const words = String(beat.say || '').trim().split(/\s+/).filter(Boolean).length;
+      return Math.max(2.8, words / 2.6 + 0.8) * 1000;
+    }
+
+    async function playStory() {
+      const beats = storyBeats();
+      if (!beats.length) return;
+
+      stopStory();
+      const token = storyVersion;
+      storyPlaying = true;
+      playButton.disabled = false;
+      playButton.textContent = 'Stop';
+      playButton.classList.add('active');
+
+      for (const beat of beats) {
+        if (token !== storyVersion) return;
+
+        caption.textContent = beat.say || '';
+        caption.hidden = !beat.say;
+
+        const action = beat.do;
+        const focus = Array.isArray(beat.focus) ? beat.focus : [];
+        let exploded = false;
+
+        if (action === 'cut') {
+          setCutState(true);
+        } else if (action === 'explode') {
+          setExplodeState(true);
+          exploded = true;
+        } else if (action === 'highlight' || action === 'flow') {
+          viewer.highlight(focus.length ? focus : null);
+        } else if (action === 'build' || action === 'orbit') {
+          viewer.highlight(null);
+        }
+
+        await new Promise(resolve => setTimeout(resolve, beatDuration(beat)));
+        if (token !== storyVersion) return;
+        if (exploded) setExplodeState(false);
+      }
+
+      if (token === storyVersion) stopStory();
+    }
+
+    function clearVideoTicker() {
+      if (videoTicker !== null) {
+        clearInterval(videoTicker);
+        videoTicker = null;
+      }
+    }
+
+    function renderingText() {
+      const elapsed = Math.floor((performance.now() - videoStarted) / 1000);
+      return `Rendering 3Blue1Brown-style video with Manim…\nElapsed ${elapsed}s`;
+    }
+
+    function closeVideo() {
+      videoVersion += 1;
+      clearVideoTicker();
+      videoPlayer.pause();
+      videoPlayer.removeAttribute('src');
+      videoPlayer.load();
+      videoPlayer.hidden = true;
+      videoModal.hidden = true;
+    }
+
+    async function startVideo() {
+      if (!currentId) return;
+      closeVideo();
+      const token = ++videoVersion;
+      const sceneId = currentId;
+
+      videoModal.hidden = false;
+      videoPlayer.hidden = true;
+      videoStatus.hidden = false;
+      videoStarted = performance.now();
+      videoStatus.textContent = renderingText();
+      videoTicker = setInterval(() => {
+        if (token === videoVersion && !videoStatus.hidden) {
+          videoStatus.textContent = renderingText();
+        }
+      }, 1000);
+
+      const fail = message => {
+        if (token !== videoVersion) return;
+        clearVideoTicker();
+        videoPlayer.hidden = true;
+        videoStatus.hidden = false;
+        videoStatus.textContent = message || 'The video could not be rendered.';
+      };
+
+      try {
+        const created = await fetchJSON('/api/video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scene_id: sceneId, quality: 'l' })
+        });
+        if (token !== videoVersion) return;
+        if (!created.job) throw new Error('The renderer did not return a job id.');
+
+        while (token === videoVersion) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          if (token !== videoVersion) return;
+
+          const job = await fetchJSON(`/api/video/${encodeURIComponent(created.job)}`);
+          if (token !== videoVersion) return;
+
+          if (job.state === 'done') {
+            clearVideoTicker();
+            videoStatus.hidden = true;
+            videoPlayer.src = job.url;
+            videoPlayer.hidden = false;
+            videoPlayer.play().catch(() => {});
+            return;
+          }
+          if (job.state === 'error') {
+            fail(job.error || job.message || 'The Manim render failed.');
+            return;
+          }
+        }
+      } catch (error) {
+        fail(error.message || 'The video could not be rendered.');
+      }
+    }
+
+    askbar.addEventListener('submit', event => {
+      event.preventDefault();
+      startQuery(askInput.value);
+    });
+
+    scenesButton.addEventListener('click', () => {
+      if (gallery.hidden) openGallery();
+      else closeGallery();
+    });
+
+    galleryRefresh.addEventListener('click', refreshScenes);
+
+    cutButton.addEventListener('click', () => setCutState(!cutEnabled));
+    explodeButton.addEventListener('click', () => setExplodeState(!explodeEnabled));
+
+    playButton.addEventListener('click', () => {
+      if (storyPlaying) stopStory();
+      else playStory();
+    });
+
+    videoButton.addEventListener('click', startVideo);
+    videoClose.addEventListener('click', closeVideo);
+    videoModal.addEventListener('click', event => {
+      if (event.target === videoModal) closeVideo();
+    });
+    cardClose.addEventListener('click', closeCard);
+
+    window.addEventListener('resize', positionCard);
+
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        closeCard();
+        closeVideo();
+        closeGallery();
+        return;
+      }
+
+      if (
+        event.key === '/' &&
+        !event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !event.target.closest('input, textarea, select, [contenteditable="true"]')
+      ) {
+        event.preventDefault();
+        askInput.focus();
+      }
+    });
+
+    refreshScenes();
+
+    const params = new URLSearchParams(window.location.search);
+    const initialQuery = params.get('q');
+    const initialScene = params.get('scene');
+    if (initialQuery) {
+      startQuery(initialQuery);
+    } else if (initialScene) {
+      loadScene(initialScene);
+    }
+  </script>
+</body>
+</html>
